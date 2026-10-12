@@ -33,3 +33,32 @@ jobs:
           -destination 'generic/platform=iOS Simulator'
           -derivedDataPath "$RUNNER_TEMP/TrailNotesBuild"
           CODE_SIGNING_ALLOWED=NO build
+  accessibility:
+    name: Accessibility UI tests (${{ matrix.device }})
+    runs-on: macos-26
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        device: ['iPhone 17e', 'iPad mini (A17 Pro)']
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Test journal accessibility flows
+        run: >-
+          xcodebuild -project TrailNotes.xcodeproj -scheme TrailNotes
+          -destination 'platform=iOS Simulator,name=${{ matrix.device }},OS=latest'
+          -parallel-testing-enabled NO
+          -derivedDataPath "$RUNNER_TEMP/TrailNotesUITests"
+          -resultBundlePath "$RUNNER_TEMP/Accessibility.xcresult"
+          CODE_SIGNING_ALLOWED=NO test
+      - name: Preserve test results and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/Accessibility.xcresult
+          retention-days: 14

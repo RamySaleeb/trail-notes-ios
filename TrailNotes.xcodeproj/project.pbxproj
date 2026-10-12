@@ -6,11 +6,31 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		8DDA24D456141D488DC5745E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CAC5F30D307CF60600C7F217 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CAC5F314307CF60600C7F217;
+			remoteInfo = TrailNotes;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		34B72C3EC2323BEA755C0867 /* TrailNotesUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrailNotesUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CAC5F315307CF60600C7F217 /* TrailNotes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrailNotes.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		4F10B4F98A3F8CDD84FC67F0 /* TrailNotesUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = TrailNotesUITests;
+			sourceTree = "<group>";
+		};
 		CAC5F317307CF60600C7F217 /* TrailNotes */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = TrailNotes;
@@ -26,6 +46,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D6458A60F432643BA3EF3840 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -34,6 +61,7 @@
 			children = (
 				CAC5F317307CF60600C7F217 /* TrailNotes */,
 				CAC5F316307CF60600C7F217 /* Products */,
+				4F10B4F98A3F8CDD84FC67F0 /* TrailNotesUITests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -41,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				CAC5F315307CF60600C7F217 /* TrailNotes.app */,
+				34B72C3EC2323BEA755C0867 /* TrailNotesUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +77,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		51C51A02976E73740486B395 /* TrailNotesUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5807147F4043CDADE14C9A3F /* Build configuration list for PBXNativeTarget "TrailNotesUITests" */;
+			buildPhases = (
+				F360187B7A9600F172C41CB6 /* Sources */,
+				D6458A60F432643BA3EF3840 /* Frameworks */,
+				1E10BC7327DC58EA56037A5D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0D03D83FCBC8560454E543F1 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				4F10B4F98A3F8CDD84FC67F0 /* TrailNotesUITests */,
+			);
+			name = TrailNotesUITests;
+			packageProductDependencies = (
+			);
+			productName = TrailNotesUITests;
+			productReference = 34B72C3EC2323BEA755C0867 /* TrailNotesUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		CAC5F314307CF60600C7F217 /* TrailNotes */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CAC5F320307CF60700C7F217 /* Build configuration list for PBXNativeTarget "TrailNotes" */;
@@ -100,11 +152,19 @@
 			projectRoot = "";
 			targets = (
 				CAC5F314307CF60600C7F217 /* TrailNotes */,
+				51C51A02976E73740486B395 /* TrailNotesUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		1E10BC7327DC58EA56037A5D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CAC5F313307CF60600C7F217 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -122,9 +182,51 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F360187B7A9600F172C41CB6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		0D03D83FCBC8560454E543F1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = TrailNotes;
+			target = CAC5F314307CF60600C7F217 /* TrailNotes */;
+			targetProxy = 8DDA24D456141D488DC5745E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		1FE1D18C63B8464711485078 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ramysaleeb.TrailNotesUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = TrailNotes;
+			};
+			name = Release;
+		};
+		96606729189DE6AAE5823C3B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ramysaleeb.TrailNotesUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = TrailNotes;
+			};
+			name = Debug;
+		};
 		CAC5F31E307CF60700C7F217 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -309,6 +411,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		5807147F4043CDADE14C9A3F /* Build configuration list for PBXNativeTarget "TrailNotesUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				96606729189DE6AAE5823C3B /* Debug */,
+				1FE1D18C63B8464711485078 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		CAC5F310307CF60600C7F217 /* Build configuration list for PBXProject "TrailNotes" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -22,7 +22,16 @@ xcodebuild -project TrailNotes.xcodeproj -scheme TrailNotes \
   -derivedDataPath /tmp/TrailNotesBuild CODE_SIGNING_ALLOWED=NO build
 ```
 
-Open `TrailNotes.xcodeproj` to run the app. The core tests use Swift Testing through `Package.swift`; they are not an Xcode UI test target. CI runs these same tests and an unsigned simulator build on pushes to main, pull requests, and manual dispatch. A green build does not prove UI or accessibility correctness.
+Open `TrailNotes.xcodeproj` to run the app. The core tests use Swift Testing through `Package.swift`. The separate `TrailNotesUITests` target exercises journal flows, keyboard shortcuts, largest text sizes, and selected accessibility audits with fictional in-memory fixtures.
+
+```sh
+xcodebuild -project TrailNotes.xcodeproj -scheme TrailNotes \
+  -destination 'platform=iOS Simulator,name=iPhone 17e,OS=latest' \
+  -parallel-testing-enabled NO -resultBundlePath /tmp/TrailNotesAccessibility.xcresult \
+  CODE_SIGNING_ALLOWED=NO test
+```
+
+Repeat with `name=iPad mini (A17 Pro)`. CI runs core tests, an unsigned build, and both UI destinations on pushes to main, pull requests, and manual dispatch. Result bundles retain screenshots and audit diagnostics for 14 days. See the [validation record](docs/ACCESSIBILITY.md) for scope and the remaining physical-device VoiceOver checklist. Passing automated checks does not establish accessibility conformance.
 
 CI pins Xcode 26.6 on `macos-26`; if the runner image retires that version, update the pin and document the new verified toolchain together. See the [official runner inventory](https://github.com/actions/runner-images/blob/main/images/macos/macos-26-Readme.md).
 
@@ -32,6 +41,8 @@ CI pins Xcode 26.6 on `macos-26`; if the runner image retires that version, upda
 - `TrailNotes/Core/JournalModel.swift`: injectable main-actor model and compose draft state.
 - `TrailNotes/TrailNotesApp.swift`: SwiftUI presentation.
 - `Tests/TrailNotesCoreTests`: deterministic behavior tests with isolated temporary files.
+- `TrailNotes/Core/JournalAccessibility.swift`: concise semantic row labels and favorite state.
+- `TrailNotesUITests`: simulator flow tests and accessibility audits.
 
 Keep disk access out of views, avoid unneeded packages, preserve existing data on failures, and use semantic system colors and text styles. Do not silently change the on-disk format; explain compatibility and recovery if a change requires migration.
 

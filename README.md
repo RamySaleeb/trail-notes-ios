@@ -4,7 +4,7 @@
 
 An original native iOS field journal built with Swift and SwiftUI. Capture small moments, find them by title, place, or notes, and keep favorites close.
 
-**Status:** working iOS simulator demo. Built with Xcode 26.6 and manually checked on iPhone 17 Pro / iOS 26.5. Twenty-one Swift Testing tests cover core behavior, recovery, editing/deletion, and parameterized search edge cases. Source is public on GitHub. Not distributed through TestFlight or the App Store.
+**Status:** working iOS simulator demo. Built with Xcode 26.6 and manually checked on iPhone 17 Pro / iOS 26.5. Twenty-four Swift Testing tests cover core behavior, recovery, editing/deletion, search edge cases, and accessible labels. Five simulator UI tests cover keyboard workflows, recovery dialogs, favorite semantics, and largest-text layouts in light and dark appearances. Source is public on GitHub. Not distributed through TestFlight or the App Store.
 
 <img src="preview.png" width="320" alt="Trail Notes showing two saved field notes with Favorites only enabled on an iPhone simulator">
 
@@ -25,6 +25,8 @@ The included entries are fictional examples. Data is stored in the app's Applica
 | --- | --- |
 | `TrailNotes/Core/Journal.swift` | Codable value model, query rules, actor-backed disk repository |
 | `TrailNotes/Core/JournalModel.swift` | Injectable observable model and compose draft state |
+| `TrailNotes/Core/JournalAccessibility.swift` | Concise title/place labels and explicit favorite state |
+| `TrailNotesUITests/` | Deterministic simulator flows and accessibility audits |
 | `TrailNotes/TrailNotesApp.swift` | SwiftUI app, navigation, composition |
 | `Tests/TrailNotesCoreTests/` | Filtering, disk round trips, injected failures, edit/delete persistence and retry |
 
@@ -66,9 +68,11 @@ To run on a physical device, choose your own signing team in Xcode. This native 
 6. Choose **Delete note** to see the confirmation. Cancel keeps it; Delete removes it after persistence succeeds. A failure keeps the note available to retry.
 7. Relaunch to confirm saved changes persist. Deleting the final note leaves an empty journal, without restoring sample entries.
 
-Verified on iPhone 17 Pro / iOS 26.5: launch, note details, favorite label updates, favorite filtering, search, new-note save, and persistence after terminating and relaunching the app. Editing and saving were also checked in the simulator, along with the deletion confirmation and Cancel path. The screenshot shows fictional sample entries after favoriting both.
+The original simulator walkthrough covered launch, detail, search, favorites, creation, editing, deletion confirmation, and persistence after relaunch. The new UI suite checks keyboard field navigation/save/retry and sheet cancellation, search, edit cancellation, deletion confirmation, and largest accessibility text in light and dark on iPhone and iPad. Selected audits check text clipping, descriptions, touch targets, and contrast.
 
-Still to validate: VoiceOver reading order, full keyboard navigation, accessibility text sizes, iPad layouts, and physical-device behavior. The automated tests cover core behavior, model recovery, and compose draft retention; there is not yet an automated UI test target.
+Try Command-N for a new note and Command-S to save. Use the native Cancel control to discard a draft. Tab/Shift-Tab move between compose fields; Previous/Next/Done controls also support the software keyboard. At accessibility text sizes, note titles and previews expand and controls remain scrollable.
+
+See the [accessibility validation record](docs/ACCESSIBILITY.md) for tested devices, reproduction steps, screenshots, and limitations. Physical-device VoiceOver reading order and actual focus restoration still need manual validation. Full Keyboard Access, Switch Control, and Voice Control are not claimed as verified.
 
 ## Storage recovery
 
@@ -76,16 +80,16 @@ Still to validate: VoiceOver reading order, full keyboard navigation, accessibil
 
 Failed saves retain existing entries. Editing keeps its draft for retry and updates the existing record instead of inserting a duplicate. A stale draft cannot restore a deleted note. Deletion commits only after storage succeeds; a failed deletion leaves the note visible. In the compose sheet, the draft remains available and Save retries it; the sheet dismisses only after success. Fields and dismissal are disabled during a save. The sheet owns its error alert, avoiding a second alert underneath it. Successful retries clear error state. Overlapping load/save operations are rejected instead of queueing stale snapshots.
 
-Run `swift test` to exercise injected load/save failures and retry, busy-state cleanup, empty-versus-missing journals, competing saves, blank-title rejection, draft retention, edit metadata preservation, deletion retry, and an empty journal after deleting the final note. Edit/delete persistence is also checked against real temporary JSON files. The fake storage uses continuations for concurrency tests—no sleeps, network, or disk-permission tricks. Draft retention is tested at the presentation-state level; automated simulator UI testing remains future work.
+Run `swift test` to exercise injected load/save failures and retry, busy-state cleanup, empty-versus-missing journals, competing saves, blank-title rejection, draft retention, edit metadata preservation, deletion retry, and an empty journal after deleting the final note. Edit/delete persistence is also checked against real temporary JSON files. The fake storage uses continuations for concurrency tests—no sleeps, network, or disk-permission tricks. Draft retention is tested at both the presentation-state level and through an injected save failure in the simulator UI.
 
 ## Contributing and roadmap
 
-Start with the [contribution guide](CONTRIBUTING.md) for setup, local checks, code boundaries, and the pull request checklist. GitHub Actions runs core tests and an unsigned iOS simulator build on pushes and pull requests. UI and accessibility validation remain separate checks.
+Start with the [contribution guide](CONTRIBUTING.md) for setup, local checks, code boundaries, and the pull request checklist. GitHub Actions runs core tests, an unsigned simulator build, and UI tests on iPhone and iPad. Simulator results include screenshots and selected accessibility audits; physical-device assistive-technology validation remains separate.
 
 | Issue | Scope |
 | --- | --- |
 | [#1 Search edge-case tests](https://github.com/RamySaleeb/trail-notes-ios/issues/1) | Implemented: blank/Unicode whitespace, field matches, combined filters, canonical Unicode equivalence, and input immutability |
-| [#2 Accessibility validation](https://github.com/RamySaleeb/trail-notes-ios/issues/2) | VoiceOver, Dynamic Type, keyboard navigation, and documented device checks |
+| [#2 Accessibility validation](https://github.com/RamySaleeb/trail-notes-ios/issues/2) | Implemented semantics, wrapping layouts, shortcuts, and simulator regression tests; physical-device VoiceOver validation remains open |
 | [#3 Injectable storage and failure recovery](https://github.com/RamySaleeb/trail-notes-ios/issues/3) | Implemented: deterministic model tests for failed load/save and retry |
 | [#4 Safe editing and deletion](https://github.com/RamySaleeb/trail-notes-ios/issues/4) | Implemented: preserve identity and drafts, confirm deletion, and test persistence and failure recovery |
 
