@@ -1,0 +1,35 @@
+name: Swift tests and iOS build
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: swift-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    name: Core tests and simulator build
+    runs-on: macos-26
+    timeout-minutes: 20
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Toolchain versions
+        run: |
+          xcodebuild -version
+          swift --version
+      - name: Test core package
+        run: swift test --parallel
+      - name: Build iOS simulator app (unsigned)
+        run: >-
+          xcodebuild -project TrailNotes.xcodeproj -scheme TrailNotes
+          -configuration Debug -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
+          -derivedDataPath "$RUNNER_TEMP/TrailNotesBuild"
+          CODE_SIGNING_ALLOWED=NO build
