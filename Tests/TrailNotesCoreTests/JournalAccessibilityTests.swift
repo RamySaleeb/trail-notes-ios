@@ -4,17 +4,19 @@ import Testing
 
 @Test func rowAnnouncesFavoriteAndMissingLocation() {
     let entry = JournalEntry(title: "Morning walk", place: " \n", notes: "", isFavorite: true)
-    #expect(entry.accessibilitySummary == "Morning walk. No location added. Favorite")
+    #expect(entry.accessibilityTitle == "Morning walk, No location added")
+    #expect(entry.accessibilityFavoriteState == "Favorite")
 }
 
-@Test func rowPreservesUnicodeAndFullNotes() {
+@Test func rowPreservesUnicodeWithoutDuplicatingTheNoteBody() {
     let notes = String(repeating: "A fictional observation. ", count: 20)
-    let entry = JournalEntry(title: "東京散歩", place: "Café", notes: notes)
-    #expect(entry.accessibilitySummary.contains("東京散歩. Café. Not a favorite"))
-    #expect(entry.accessibilitySummary.hasSuffix(notes))
+    let entry = JournalEntry(title: "東京散歩", place: " Café ", notes: notes)
+    #expect(entry.accessibilityTitle == "東京散歩, Café")
+    #expect(entry.accessibilityFavoriteState == "Not a favorite")
+    #expect(entry.notes == notes)
 }
 
-@MainActor @Test func accessibleSummaryTracksPersistedEditsAndFavorites() async {
+@MainActor @Test func accessibleLabelsTrackPersistedEditsAndFavorites() async {
     let entry = JournalEntry(title: "Before", place: "Park", notes: " ")
     let storage = FakeStorage(entries: [entry])
     let model = JournalModel(storage: storage)
@@ -25,5 +27,6 @@ import Testing
     var updated = model.entries
     updated[0].isFavorite = true
     #expect(await model.save(updated))
-    #expect(model.entries[0].accessibilitySummary == "After. Park. Favorite")
+    #expect(model.entries[0].accessibilityTitle == "After, Park")
+    #expect(model.entries[0].accessibilityFavoriteState == "Favorite")
 }
