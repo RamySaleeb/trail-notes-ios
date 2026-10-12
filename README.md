@@ -4,7 +4,7 @@
 
 An original native iOS field journal built with Swift and SwiftUI. Capture small moments, find them by title, place, or notes, and keep favorites close.
 
-**Status:** working iOS simulator demo. Built with Xcode 26.6 and manually checked on iPhone 17 Pro / iOS 26.5. Sixteen Swift Testing tests cover core behavior and recovery. Source is public on GitHub. Not distributed through TestFlight or the App Store.
+**Status:** working iOS simulator demo. Built with Xcode 26.6 and manually checked on iPhone 17 Pro / iOS 26.5. Twenty-one Swift Testing tests cover core behavior, recovery, editing/deletion, and parameterized search edge cases. Source is public on GitHub. Not distributed through TestFlight or the App Store.
 
 <img src="preview.png" width="320" alt="Trail Notes showing two saved field notes with Favorites only enabled on an iPhone simulator">
 
