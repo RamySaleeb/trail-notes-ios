@@ -29,7 +29,8 @@ CI pins Xcode 26.6 on `macos-26`; if the runner image retires that version, upda
 ## Code boundaries
 
 - `TrailNotes/Core/Journal.swift`: value models, search rules, and actor-backed JSON storage. The same source is compiled by the app and test package.
-- `TrailNotes/TrailNotesApp.swift`: SwiftUI presentation and main-actor state.
+- `TrailNotes/Core/JournalModel.swift`: injectable main-actor model and compose draft state.
+- `TrailNotes/TrailNotesApp.swift`: SwiftUI presentation.
 - `Tests/TrailNotesCoreTests`: deterministic behavior tests with isolated temporary files.
 
 Keep disk access out of views, avoid unneeded packages, preserve existing data on failures, and use semantic system colors and text styles. Do not silently change the on-disk format; explain compatibility and recovery if a change requires migration.
