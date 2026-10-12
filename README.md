@@ -1,5 +1,7 @@
 # Trail Notes
 
+[![Swift tests and iOS build](https://github.com/RamySaleeb/trail-notes-ios/actions/workflows/ci.yml/badge.svg)](https://github.com/RamySaleeb/trail-notes-ios/actions/workflows/ci.yml)
+
 An original native iOS field journal built with Swift and SwiftUI. Capture small moments, find them by title, place, or notes, and keep favorites close.
 
 **Status:** working iOS simulator demo. Built with Xcode 26.6 and manually checked on iPhone 17 Pro / iOS 26.5. Four Swift Testing core tests pass. Source is public on GitHub. Not distributed through TestFlight or the App Store.
@@ -62,6 +64,15 @@ Verified on iPhone 17 Pro / iOS 26.5: launch, note details, favorite label updat
 
 Still to validate: VoiceOver reading order, full keyboard navigation, accessibility text sizes, iPad layouts, and physical-device behavior. The four automated tests cover core behavior; there is not yet an automated UI test target.
 
-## Contributing
+## Contributing and roadmap
 
-Keep changes focused, include tests for behavior changes, and describe simulator/OS versions used for UI verification. Please use synthetic sample data only. Suggested next steps after app validation: edit/delete with confirmation, export, and injected storage failure tests for the presentation layer.
+Start with the [contribution guide](CONTRIBUTING.md) for setup, local checks, code boundaries, and the pull request checklist. GitHub Actions runs core tests and an unsigned iOS simulator build on pushes and pull requests. UI and accessibility validation remain separate checks.
+
+| Issue | Scope |
+| --- | --- |
+| [#1 Search edge-case tests](https://github.com/RamySaleeb/trail-notes-ios/issues/1) | Good first issue: whitespace, Unicode, combined filters, and input immutability |
+| [#2 Accessibility validation](https://github.com/RamySaleeb/trail-notes-ios/issues/2) | VoiceOver, Dynamic Type, keyboard navigation, and documented device checks |
+| [#3 Injectable storage and failure recovery](https://github.com/RamySaleeb/trail-notes-ios/issues/3) | Deterministic model tests for failed load/save and retry |
+| [#4 Safe editing and deletion](https://github.com/RamySaleeb/trail-notes-ios/issues/4) | Preserve identity and drafts, confirm deletion, and verify persistence |
+
+Each issue includes acceptance criteria and exclusions. Comment before starting to coordinate work. These are proposed contributions, not promised delivery dates. Use original code and fictional journal data only.
