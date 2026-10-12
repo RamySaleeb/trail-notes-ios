@@ -1,14 +1,14 @@
 import Foundation
 
 extension JournalEntry {
-    /// A row is one navigation target. Include state conveyed visually by its icon.
-    public var accessibilitySummary: String {
+    /// Keep the row concise; its navigation action exposes the complete note.
+    public var accessibilityTitle: String {
         let location = place.trimmingCharacters(in: .whitespacesAndNewlines)
-        var parts = [title, location.isEmpty ? "No location added" : location,
-                     isFavorite ? "Favorite" : "Not a favorite"]
-        if !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            parts.append(notes)
-        }
-        return parts.joined(separator: ". ")
+        return title + ", " + (location.isEmpty ? "No location added" : location)
+    }
+
+    /// Expose the state independently of the star icon and action label.
+    public var accessibilityFavoriteState: String {
+        isFavorite ? "Favorite" : "Not a favorite"
     }
 }
