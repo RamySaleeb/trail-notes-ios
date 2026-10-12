@@ -4,7 +4,7 @@
 
 An original native iOS field journal built with Swift and SwiftUI. Capture small moments, find them by title, place, or notes, and keep favorites close.
 
-**Status:** working iOS simulator demo. Built with Xcode 26.6 and manually checked on iPhone 17 Pro / iOS 26.5. Ten Swift Testing tests cover core behavior and recovery. Source is public on GitHub. Not distributed through TestFlight or the App Store.
+**Status:** working iOS simulator demo. Built with Xcode 26.6 and manually checked on iPhone 17 Pro / iOS 26.5. Fifteen Swift Testing tests cover core behavior, recovery, and parameterized search edge cases. Source is public on GitHub. Not distributed through TestFlight or the App Store.
 
 <img src="preview.png" width="320" alt="Trail Notes showing two saved field notes with Favorites only enabled on an iPhone simulator">
 
@@ -36,6 +36,8 @@ Requires Swift 6 or later on macOS:
 ```sh
 swift test
 ```
+
+Search regression fixtures use fixed IDs and timestamps. They cover empty and whitespace-only queries (including Unicode whitespace), independent title/place/notes matches, favorites with nonmatching queries, and unchanged input order and values. Unicode cases check composed/decomposed `é` in both directions and an exact Japanese substring. Search retains `localizedStandardContains`; these tests avoid locale-specific case mappings and do not claim identical accent folding or collation in every locale.
 
 ## Run the iOS app
 
@@ -79,7 +81,7 @@ Start with the [contribution guide](CONTRIBUTING.md) for setup, local checks, co
 
 | Issue | Scope |
 | --- | --- |
-| [#1 Search edge-case tests](https://github.com/RamySaleeb/trail-notes-ios/issues/1) | Good first issue: whitespace, Unicode, combined filters, and input immutability |
+| [#1 Search edge-case tests](https://github.com/RamySaleeb/trail-notes-ios/issues/1) | Implemented: blank/Unicode whitespace, field matches, combined filters, canonical Unicode equivalence, and input immutability |
 | [#2 Accessibility validation](https://github.com/RamySaleeb/trail-notes-ios/issues/2) | VoiceOver, Dynamic Type, keyboard navigation, and documented device checks |
 | [#3 Injectable storage and failure recovery](https://github.com/RamySaleeb/trail-notes-ios/issues/3) | Implemented: deterministic model tests for failed load/save and retry |
 | [#4 Safe editing and deletion](https://github.com/RamySaleeb/trail-notes-ios/issues/4) | Preserve identity and drafts, confirm deletion, and verify persistence |
