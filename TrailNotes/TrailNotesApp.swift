@@ -6,6 +6,8 @@ struct TrailNotesApp: App {
 }
 
 struct JournalView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @AccessibilityFocusState private var newNoteFocused: Bool
     @State private var model = JournalModel()
     @State private var query = ""
     @State private var favoritesOnly = false
@@ -23,7 +25,7 @@ struct JournalView: View {
                         Label("A LITTLE SPACE TO NOTICE", systemImage: "leaf")
                             .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                         Text("Keep the moments.\nFind your next path.")
-                            .font(.largeTitle.weight(.bold)).fixedSize(horizontal: false, vertical: true)
+                            .font(.largeTitle.weight(.bold)).accessibilityAddTraits(.isHeader).fixedSize(horizontal: false, vertical: true)
                         Text("A private journal on this device. No account, no network, just your notes.")
                             .foregroundStyle(.secondary)
                     }.padding(.vertical, 12)
@@ -46,9 +48,13 @@ struct JournalView: View {
                                 Label(entry.place.isEmpty ? "No location added" : entry.place,
                                       systemImage: entry.isFavorite ? "star.fill" : "mappin")
                                     .font(.subheadline).foregroundStyle(.secondary)
-                                Text(entry.notes).font(.subheadline).foregroundStyle(.secondary).lineLimit(2)
+                                Text(entry.notes).font(.subheadline).foregroundStyle(.secondary).lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }.padding(.vertical, 8)
                         }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(entry.accessibilitySummary)
+                        .accessibilityHint("Opens the full note and actions")
                     }
                 }
             }
@@ -57,8 +63,10 @@ struct JournalView: View {
             .toolbar {
                 Button("New note", systemImage: "square.and.pencil") { composing = true }
                     .disabled(!model.isLoaded || model.isBusy)
+                    .keyboardShortcut("n", modifiers: .command)
+                    .accessibilityFocused($newNoteFocused)
             }
-            .sheet(isPresented: $composing) {
+            .sheet(isPresented: $composing, onDismiss: { newNoteFocused = true }) {
                 ComposeView(model: model)
             }
             .alert("Journal unavailable", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
@@ -73,6 +81,9 @@ struct JournalView: View {
 private struct ComposeView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var draft: JournalDraft
+    private enum Field: Hashable { case title, place, notes }
+    @FocusState private var focusedField: Field?
+    @ScaledMetric(relativeTo: .body) private var editorHeight = 180.0
     let model: JournalModel
 
     init(model: JournalModel, entry: JournalEntry? = nil) {
@@ -85,24 +96,36 @@ private struct ComposeView: View {
             Form {
                 Section("The moment") {
                     TextField("Title", text: $draft.title)
+                        .accessibilityLabel("Title, required")
+                        .accessibilityHint("Enter a title to enable Save")
+                        .focused($focusedField, equals: .title).submitLabel(.next)
+                        .onSubmit { focusedField = .place }
                     TextField("Place (optional)", text: $draft.place)
+                        .accessibilityLabel("Place, optional")
+                        .focused($focusedField, equals: .place).submitLabel(.next)
+                        .onSubmit { focusedField = .notes }
                 }
                 Section("What did you notice?") {
-                    TextEditor(text: $draft.notes).frame(minHeight: 180).accessibilityLabel("Notes")
+                    TextEditor(text: $draft.notes).frame(minHeight: editorHeight).accessibilityLabel("Notes")
+                        .focused($focusedField, equals: .notes)
+                    Text("A title is required. Place and notes are optional.")
+                        .font(.footnote).foregroundStyle(.secondary)
                 }
             }
             .disabled(draft.isSaving)
+            .onAppear { focusedField = .title }
             .interactiveDismissDisabled(draft.isSaving)
             .alert("Could not save", isPresented: $draft.saveFailed) { Button("OK", role: .cancel) {} } message: { Text("Your draft is still here. Please try saving again.") }
             .navigationTitle(draft.isEditing ? "Edit field note" : "New field note").navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(draft.isSaving) }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction).disabled(draft.isSaving) }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         Task {
                             if await draft.save(using: model) { dismiss() }
                         }
-                    }.disabled(draft.isSaving || !draft.canSave)
+                    }.keyboardShortcut("s", modifiers: .command)
+                    .disabled(draft.isSaving || !draft.canSave)
                 }
             }
         }
@@ -114,6 +137,7 @@ private struct NoteDetailView: View {
     let model: JournalModel
     let entryID: UUID
     @State private var editing: JournalEntry?
+    @AccessibilityFocusState private var editNoteFocused: Bool
     @State private var confirmingDelete = false
     @State private var deleteFailed = false
 
@@ -125,7 +149,9 @@ private struct NoteDetailView: View {
                         Label(entry.place.isEmpty ? "Somewhere memorable" : entry.place, systemImage: "mappin.and.ellipse")
                             .foregroundStyle(.secondary)
                         Text(entry.title).font(.largeTitle.bold())
+                            .fixedSize(horizontal: false, vertical: true).accessibilityAddTraits(.isHeader)
                         Text(entry.createdAt, style: .date).font(.caption).foregroundStyle(.secondary)
+                            .accessibilityLabel("Created \(entry.createdAt.formatted(date: .long, time: .omitted))")
                         Text(entry.notes).font(.body).textSelection(.enabled)
                         Button(entry.isFavorite ? "Remove from favorites" : "Add to favorites",
                                systemImage: entry.isFavorite ? "star.fill" : "star") {
@@ -135,8 +161,10 @@ private struct NoteDetailView: View {
                                 Task { await model.save(updated) }
                             }
                         }.buttonStyle(.bordered)
+                        .accessibilityValue(entry.isFavorite ? "Favorite" : "Not a favorite")
                         Button("Edit note", systemImage: "pencil") { editing = entry }
-                            .buttonStyle(.bordered)
+                            .buttonStyle(.bordered).keyboardShortcut("e", modifiers: .command)
+                            .accessibilityFocused($editNoteFocused)
                         Button("Delete note", systemImage: "trash", role: .destructive) { confirmingDelete = true }
                             .buttonStyle(.bordered)
                     }.disabled(model.isBusy).frame(maxWidth: 680, alignment: .leading).padding()
@@ -146,7 +174,7 @@ private struct NoteDetailView: View {
             }
         }
         .navigationTitle("Field note").navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $editing) { entry in ComposeView(model: model, entry: entry) }
+        .sheet(item: $editing, onDismiss: { editNoteFocused = true }) { entry in ComposeView(model: model, entry: entry) }
         .alert("Delete this note?", isPresented: $confirmingDelete) {
             Button("Delete note", role: .destructive) {
                 Task {
