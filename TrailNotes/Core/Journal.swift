@@ -36,8 +36,14 @@ public enum JournalQuery {
     }
 }
 
+/// A nil load means first launch; an empty array means a saved empty journal.
+public protocol JournalStorage: Sendable {
+    func load() async throws -> [JournalEntry]?
+    func save(_ entries: [JournalEntry]) async throws
+}
+
 /// Serialized disk access. Missing data is a first launch; corrupt data is an error.
-public actor JournalRepository {
+public actor JournalRepository: JournalStorage {
     private let fileURL: URL
     public init(fileURL: URL) { self.fileURL = fileURL }
 

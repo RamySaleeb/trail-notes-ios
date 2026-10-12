@@ -4,7 +4,7 @@
 
 An original native iOS field journal built with Swift and SwiftUI. Capture small moments, find them by title, place, or notes, and keep favorites close.
 
-**Status:** working iOS simulator demo. Built with Xcode 26.6 and manually checked on iPhone 17 Pro / iOS 26.5. Four Swift Testing core tests pass. Source is public on GitHub. Not distributed through TestFlight or the App Store.
+**Status:** working iOS simulator demo. Built with Xcode 26.6 and manually checked on iPhone 17 Pro / iOS 26.5. Ten Swift Testing tests cover core behavior and recovery. Source is public on GitHub. Not distributed through TestFlight or the App Store.
 
 <img src="preview.png" width="320" alt="Trail Notes showing two saved field notes with Favorites only enabled on an iPhone simulator">
 
@@ -23,7 +23,8 @@ The included entries are fictional examples. Data is stored in the app's Applica
 | Path | Responsibility |
 | --- | --- |
 | `TrailNotes/Core/Journal.swift` | Codable value model, query rules, actor-backed disk repository |
-| `TrailNotes/TrailNotesApp.swift` | SwiftUI app, observable state, navigation, composition |
+| `TrailNotes/Core/JournalModel.swift` | Injectable observable model and compose draft state |
+| `TrailNotes/TrailNotesApp.swift` | SwiftUI app, navigation, composition |
 | `Tests/TrailNotesCoreTests/JournalTests.swift` | Filtering, ordering, round trips, missing/empty/corrupt data |
 
 The core is a standalone Swift package. The presentation layer depends on the core; storage does not depend on SwiftUI. State changes are committed only after a successful save. A failed new-note save keeps the draft available.
@@ -62,7 +63,15 @@ To run on a physical device, choose your own signing team in Xcode. This native 
 
 Verified on iPhone 17 Pro / iOS 26.5: launch, note details, favorite label updates, favorite filtering, search, new-note save, and persistence after terminating and relaunching the app. The screenshot shows fictional sample entries after favoriting both.
 
-Still to validate: VoiceOver reading order, full keyboard navigation, accessibility text sizes, iPad layouts, and physical-device behavior. The four automated tests cover core behavior; there is not yet an automated UI test target.
+Still to validate: VoiceOver reading order, full keyboard navigation, accessibility text sizes, iPad layouts, and physical-device behavior. The automated tests cover core behavior, model recovery, and compose draft retention; there is not yet an automated UI test target.
+
+## Storage recovery
+
+`JournalModel(storage:)` accepts any `JournalStorage`; the default remains the real actor-backed JSON repository. The file format is unchanged. A missing file seeds fictional examples; a saved empty array stays empty, and a failed load does not seed or overwrite data.
+
+Failed saves retain existing entries. In the compose sheet, the draft remains available and Save retries it; the sheet dismisses only after success. Fields and dismissal are disabled during a save. The sheet owns its error alert, avoiding a second alert underneath it. Successful retries clear error state. Overlapping load/save operations are rejected instead of queueing stale snapshots.
+
+Run `swift test` to exercise injected load/save failures and retry, busy-state cleanup, empty-versus-missing journals, competing saves, blank-title rejection, and draft retention. The fake storage uses continuations for concurrency tests—no sleeps, network, or disk-permission tricks. Draft retention is tested at the presentation-state level; automated simulator UI testing remains future work.
 
 ## Contributing and roadmap
 
@@ -72,7 +81,7 @@ Start with the [contribution guide](CONTRIBUTING.md) for setup, local checks, co
 | --- | --- |
 | [#1 Search edge-case tests](https://github.com/RamySaleeb/trail-notes-ios/issues/1) | Good first issue: whitespace, Unicode, combined filters, and input immutability |
 | [#2 Accessibility validation](https://github.com/RamySaleeb/trail-notes-ios/issues/2) | VoiceOver, Dynamic Type, keyboard navigation, and documented device checks |
-| [#3 Injectable storage and failure recovery](https://github.com/RamySaleeb/trail-notes-ios/issues/3) | Deterministic model tests for failed load/save and retry |
+| [#3 Injectable storage and failure recovery](https://github.com/RamySaleeb/trail-notes-ios/issues/3) | Implemented: deterministic model tests for failed load/save and retry |
 | [#4 Safe editing and deletion](https://github.com/RamySaleeb/trail-notes-ios/issues/4) | Preserve identity and drafts, confirm deletion, and verify persistence |
 
 Each issue includes acceptance criteria and exclusions. Comment before starting to coordinate work. These are proposed contributions, not promised delivery dates. Use original code and fictional journal data only.

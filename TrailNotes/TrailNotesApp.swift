@@ -5,41 +5,6 @@ struct TrailNotesApp: App {
     var body: some Scene { WindowGroup { JournalView() } }
 }
 
-@MainActor @Observable
-final class JournalModel {
-    var entries: [JournalEntry] = []
-    var isBusy = true
-    var isLoaded = false
-    var error: String?
-    private let repository = JournalRepository(fileURL: URL.applicationSupportDirectory
-        .appending(path: "TrailNotes/journal.json"))
-
-    func load() async {
-        guard !isLoaded else { return }
-        isBusy = true
-        defer { isBusy = false }
-        do {
-            entries = try await repository.load() ?? JournalEntry.samples
-            isLoaded = true
-        } catch { self.error = "Your journal could not be opened. Existing data has been kept safe. Please try again." }
-    }
-
-    @discardableResult
-    func save(_ updated: [JournalEntry]) async -> Bool {
-        guard isLoaded, !isBusy else { return false }
-        isBusy = true
-        defer { isBusy = false }
-        do {
-            try await repository.save(updated)
-            entries = updated
-            return true
-        } catch {
-            self.error = "Your changes could not be saved. Please try again."
-            return false
-        }
-    }
-}
-
 struct JournalView: View {
     @State private var model = JournalModel()
     @State private var query = ""
@@ -111,9 +76,7 @@ struct JournalView: View {
                     .disabled(!model.isLoaded || model.isBusy)
             }
             .sheet(isPresented: $composing) {
-                ComposeView { entry in
-                    await model.save([entry] + model.entries)
-                }
+                ComposeView(model: model)
             }
             .alert("Journal unavailable", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
                 Button("OK", role: .cancel) { model.error = nil }
@@ -126,39 +89,32 @@ struct JournalView: View {
 
 private struct ComposeView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var title = ""
-    @State private var place = ""
-    @State private var notes = ""
-    @State private var isSaving = false
-    @State private var saveFailed = false
-    let onSave: (JournalEntry) async -> Bool
+    @State private var draft = JournalDraft()
+    let model: JournalModel
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("The moment") {
-                    TextField("Title", text: $title)
-                    TextField("Place (optional)", text: $place)
+                    TextField("Title", text: $draft.title)
+                    TextField("Place (optional)", text: $draft.place)
                 }
                 Section("What did you notice?") {
-                    TextEditor(text: $notes).frame(minHeight: 180).accessibilityLabel("Notes")
+                    TextEditor(text: $draft.notes).frame(minHeight: 180).accessibilityLabel("Notes")
                 }
             }
-            .interactiveDismissDisabled(isSaving)
-            .alert("Could not save", isPresented: $saveFailed) { Button("OK", role: .cancel) {} } message: { Text("Your draft is still here. Please try saving again.") }
+            .disabled(draft.isSaving)
+            .interactiveDismissDisabled(draft.isSaving)
+            .alert("Could not save", isPresented: $draft.saveFailed) { Button("OK", role: .cancel) {} } message: { Text("Your draft is still here. Please try saving again.") }
             .navigationTitle("New field note").navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(isSaving) }
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(draft.isSaving) }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        isSaving = true
                         Task {
-                            let saved = await onSave(.init(title: title.trimmingCharacters(in: .whitespacesAndNewlines),
-                                place: place.trimmingCharacters(in: .whitespacesAndNewlines), notes: notes))
-                            isSaving = false
-                            if saved { dismiss() } else { saveFailed = true }
+                            if await draft.save(using: model) { dismiss() }
                         }
-                    }.disabled(isSaving || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }.disabled(draft.isSaving || !draft.canSave)
                 }
             }
         }
