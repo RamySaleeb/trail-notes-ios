@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import TrailNotesCore
 
-private actor FakeStorage: JournalStorage {
+actor FakeStorage: JournalStorage {
     enum Failure: Error { case simulated }
     var entries: [JournalEntry]?
     var failLoad = false

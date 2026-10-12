@@ -39,24 +39,7 @@ struct JournalView: View {
                     }
                     ForEach(visibleEntries) { entry in
                         NavigationLink {
-                            let entry = model.entries.first(where: { $0.id == entry.id }) ?? entry
-                            ScrollView {
-                                VStack(alignment: .leading, spacing: 24) {
-                                    Label(entry.place.isEmpty ? "Somewhere memorable" : entry.place, systemImage: "mappin.and.ellipse")
-                                        .foregroundStyle(.secondary)
-                                    Text(entry.title).font(.largeTitle.bold())
-                                    Text(entry.createdAt, style: .date).font(.caption).foregroundStyle(.secondary)
-                                    Text(entry.notes).font(.body).textSelection(.enabled)
-                                    Button(entry.isFavorite ? "Remove from favorites" : "Add to favorites",
-                                           systemImage: entry.isFavorite ? "star.fill" : "star") {
-                                        var updated = model.entries
-                                        if let index = updated.firstIndex(where: { $0.id == entry.id }) {
-                                            updated[index].isFavorite.toggle()
-                                            Task { await model.save(updated) }
-                                        }
-                                    }.buttonStyle(.bordered).disabled(model.isBusy)
-                                }.frame(maxWidth: 680, alignment: .leading).padding()
-                            }.navigationTitle("Field note").navigationBarTitleDisplayMode(.inline)
+                            NoteDetailView(model: model, entryID: entry.id)
                         } label: {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(entry.title).font(.headline)
@@ -89,8 +72,13 @@ struct JournalView: View {
 
 private struct ComposeView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var draft = JournalDraft()
+    @State private var draft: JournalDraft
     let model: JournalModel
+
+    init(model: JournalModel, entry: JournalEntry? = nil) {
+        self.model = model
+        _draft = State(initialValue: JournalDraft(entry: entry))
+    }
 
     var body: some View {
         NavigationStack {
@@ -106,7 +94,7 @@ private struct ComposeView: View {
             .disabled(draft.isSaving)
             .interactiveDismissDisabled(draft.isSaving)
             .alert("Could not save", isPresented: $draft.saveFailed) { Button("OK", role: .cancel) {} } message: { Text("Your draft is still here. Please try saving again.") }
-            .navigationTitle("New field note").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(draft.isEditing ? "Edit field note" : "New field note").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(draft.isSaving) }
                 ToolbarItem(placement: .confirmationAction) {
@@ -117,6 +105,63 @@ private struct ComposeView: View {
                     }.disabled(draft.isSaving || !draft.canSave)
                 }
             }
+        }
+    }
+}
+
+private struct NoteDetailView: View {
+    @Environment(\.dismiss) private var dismiss
+    let model: JournalModel
+    let entryID: UUID
+    @State private var editing: JournalEntry?
+    @State private var confirmingDelete = false
+    @State private var deleteFailed = false
+
+    var body: some View {
+        Group {
+            if let entry = model.entries.first(where: { $0.id == entryID }) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        Label(entry.place.isEmpty ? "Somewhere memorable" : entry.place, systemImage: "mappin.and.ellipse")
+                            .foregroundStyle(.secondary)
+                        Text(entry.title).font(.largeTitle.bold())
+                        Text(entry.createdAt, style: .date).font(.caption).foregroundStyle(.secondary)
+                        Text(entry.notes).font(.body).textSelection(.enabled)
+                        Button(entry.isFavorite ? "Remove from favorites" : "Add to favorites",
+                               systemImage: entry.isFavorite ? "star.fill" : "star") {
+                            var updated = model.entries
+                            if let index = updated.firstIndex(where: { $0.id == entryID }) {
+                                updated[index].isFavorite.toggle()
+                                Task { await model.save(updated) }
+                            }
+                        }.buttonStyle(.bordered)
+                        Button("Edit note", systemImage: "pencil") { editing = entry }
+                            .buttonStyle(.bordered)
+                        Button("Delete note", systemImage: "trash", role: .destructive) { confirmingDelete = true }
+                            .buttonStyle(.bordered)
+                    }.disabled(model.isBusy).frame(maxWidth: 680, alignment: .leading).padding()
+                }
+            } else {
+                ContentUnavailableView("Note no longer available", systemImage: "book.closed")
+            }
+        }
+        .navigationTitle("Field note").navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $editing) { entry in ComposeView(model: model, entry: entry) }
+        .alert("Delete this note?", isPresented: $confirmingDelete) {
+            Button("Delete note", role: .destructive) {
+                Task {
+                    if await model.delete(id: entryID, reportError: false) { dismiss() }
+                    else { deleteFailed = true }
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This removes the note from this device. This cannot be undone.")
+        }
+        .alert("Could not delete", isPresented: $deleteFailed) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Your note has been kept. Try Delete note again when you are ready.")
         }
     }
 }
